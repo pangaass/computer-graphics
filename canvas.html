@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<style>
+/* 初始化CSS */
+html,body,ul,li,ol,dl,dd,dt,p,h1,h2,h3,h4,h5,h6,form,fieldset,legend,img{margin:0;padding:0;}
+fieldset,img{border:none;}
+html,body{ height:100%;width:100%;}
+address,caption,cite,code,dfn,th,var{font-style:normal; font-weight:normal;}
+ul,ol{list-style:none;}
+select,input{vertical-align:middle;}
+select,input,textarea{font-size:12px;margin:0;}
+table{border-collapse:collapse;}
+body{background:#fff;color:#333;font:12px/22px 'Microsoft Yahei','微软雅黑','Simsun','宋体','Arial';}
+/* 页面通用部分 */
+.clearfix:after{content:".";display:block;height:0;visibility:hidden;clear:both;}
+.clearfix{zoom:1;}
+.clearit{clear:both;height:0;font-size:0;overflow:hidden;}
+a{color:#1f3b7b;text-decoration:none;}
+a:visited{color:#6079b2;}
+a:hover,a:active,a:focus{color:#8d0000;text-decoration:underline;}
+.canvas{height:99.5%;width:99.5%}
+.tag{position:fixed;right:0; top:0;background:#fff; border:1px solid #000;padding:10px;}
+.select{ padding:5px; font-size:15px; font-weight:bold;}
+.selected:active{direction:none; }
+
+</style>
+</head>
+
+<body>
+    <canvas class="canvas" id='canvas'>浏览器不支持canvas标签，请选择ie9及以上版本的浏览器 </canvas>
+    <div class='tag'>
+        <span class='auther'>
+            <p>姓名：庞运河</p>
+            <p>班级：计算1601</p>
+            <p>学号：1161220120</p>
+        </span>
+        <select class='select' id='select' onclick=changeselect()>
+            <option value=1 selected='selected'>直线（数值微分法）</option>
+            <option value=2>直线（中点画线法）（仅90°到135°）</option>
+            <option value=3>直线（Bresenham算法）未完成</option>
+            <option>中点画圆法</option>
+        </select>
+    </div>
+
+    <script type='text/javascript'>
+
+        var select = 0;
+        var pointx = [];
+        var pointy = [];
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext("2d");
+        var bbox = canvas.getBoundingClientRect();
+        function drawline0() {
+            if (pointx.length == 2) {
+                var x0 = pointx[0];
+                var x1 = pointx[1];
+                var y0 = pointy[0];
+                var y1 = pointy[1];
+                var dx, dy, y, k;
+                dx = x1 - x0;
+                dy = y1 - y0;
+                k = dy / dx;
+                if (x0 <= x1) {
+                    y = y0;
+                    for (var x = x0; x < x1; x++) {
+                        drawpoint(x, parseInt(y + 0.5));
+                        y += k;
+                    }
+                }
+                else {
+                    y = y1;
+                    for (var x = x1; x < x0; x++) {
+                        drawpoint(x, parseInt(y + 0.5));
+                        y += k;
+                    }
+                }
+                // ctx.beginPath();
+                // ctx.moveTo(x0, y0);
+                // ctx.lineTo(x1, y1);
+                // ctx.stroke()
+                pointx = [];
+                pointy = [];
+            }
+        }
+        function drawline1() {
+            if(pointx.length == 2){
+                var x0 = pointx[0];
+                var x1 = pointx[1];
+                var y0 = pointy[0];
+                var y1 = pointy[1];
+                var a = y0-y1,b=x1-x0,d = 2*a+b;
+                d1 = 2*a,d2 = 2*(a+b);
+                x=x0,y=y0;
+                drawpoint(x,y);
+                while(x<x1){
+                    if(d<0){
+                        x++,y++,d+=d2;
+                    }
+                    else{
+                        x++,d+=d1;
+                    }
+                    drawpoint(x, y);
+                }
+                pointx = [];
+                pointy = [];
+            }
+        }
+        function drawline2(){
+            if (pointx.length == 2) {
+                var x0 = pointx[0];
+                var x1 = pointx[1];
+                var y0 = pointy[0];
+                var y1 = pointy[1];
+                var x,y,dx,dy,e;
+                dx = x1-x0;
+                dy = y1-y0;
+                e=-dx;
+                x=x0;
+                y=y0;
+                for(i=0;i<=dx;i++){
+                    drawpoint(x,y);
+                    x++,e=+2*dy;
+                    if(e>=0){
+                        y++;e-=2*dx;
+                    }
+                }
+                 pointx = [];
+                pointy = [];
+            }
+        }
+        function drawpoint(x, y) {
+            var x = (x - bbox.left) * (canvas.width / bbox.width);
+            var y = (y - bbox.top) * (canvas.height / bbox.height);
+            ctx.fillRect(x - 1, y - 1, 0.5, 0.5);
+            
+        }
+        function drawcircle(){
+            if(pointx.length == 1){
+                var r = Math.sqrt((pointx-700)* (pointx - 700)+(pointy-350)*(pointy-350))
+                var x, y,d;
+                x=0;
+                y=r;
+                d=1.25-r;
+                circlepoints(x,y);
+                while(x<y){
+                    if(d<0){
+                        d+=2*x+3;
+                    }
+                    else{
+                        d+=2*(x-y)+5;
+                        y--;
+                    }
+                    x++;
+                    circlepoints(x,y);
+
+                }
+                pointx = [];
+                pointy = [];
+            }
+        }
+        function circlepoints(x,y){
+            drawpoint(x + 700,y + 350);
+            drawpoint(y + 700,x + 350);
+            drawpoint(-x + 700,y + 350);
+            drawpoint(y + 700,-x + 350);
+            drawpoint(x + 700,-y + 350);
+            drawpoint(-y + 700,x + 350);
+            drawpoint(-x + 700,-y + 350);
+            drawpoint(-y + 700,-x + 350);
+        }
+        function draw() {
+                switch (select) {
+                    case 0: drawline0(); break;
+                    case 1: drawline1(); break;
+                    case 2: drawline2(); break;
+                    case 3: drawcircle();break;
+                    case 4: drawpolygons(); break;//未完成
+                }
+            }
+        canvas.onclick = function (ev) {
+            var oEvent = ev || event;
+            pointx.push(oEvent.clientX);
+            pointy.push(oEvent.clientY);
+            console.log(oEvent.clientX, oEvent.clientY)
+            draw();
+        }
+        function changeselect() {
+            select = document.getElementById('select').selectedIndex;
+            if(select != 3){
+            }
+            else{
+                 alert('圆心已默认在（700，350）的位置，点击确定半径');
+            }
+            pointx = [];
+            pointy = [];
+        }
+
+    </script>
+</body>
+
+</html>
